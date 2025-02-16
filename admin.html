@@ -1,0 +1,99 @@
+<!-- admin.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #1a1a2e;
+        color: white;
+        text-align: center;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+      }
+      button {
+        background: #00adb5;
+        color: white;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Admin Dashboard</h2>
+      <p>Welcome, <span id="adminUser"></span>!</p>
+      <button onclick="logout()">Logout</button>
+    </div>
+    <script>
+      document.getElementById("adminUser").textContent =
+        localStorage.getItem("loggedInUser") || "Admin";
+      function logout() {
+        localStorage.clear();
+        window.location.href = "index.html";
+      }
+    </script>
+  </body>
+</html>
+
+<!-- owner.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Owner Dashboard</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #1a1a2e;
+        color: white;
+        text-align: center;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+      }
+      button {
+        background: #00adb5;
+        color: white;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Owner Dashboard</h2>
+      <p>Welcome, <span id="ownerUser"></span>!</p>
+      <button onclick="logout()">Logout</button>
+    </div>
+    <script>
+      document.getElementById("ownerUser").textContent =
+        localStorage.getItem("loggedInUser") || "Owner";
+      function logout() {
+        localStorage.clear();
+        window.location.href = "index.html";
+      }
+    </script>
+  </body>
+</html>
