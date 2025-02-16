@@ -8,69 +8,111 @@
     <style>
       body {
         font-family: Arial, sans-serif;
-        background: linear-gradient(135deg, #1e1e2e, #232323);
-        color: white;
-        margin: 0;
         padding: 20px;
+        background: linear-gradient(to right, #141e30, #243b55);
+        color: white;
       }
+
       .container {
         max-width: 1200px;
-        margin: auto;
+        margin: 0 auto;
         background: rgba(255, 255, 255, 0.1);
         padding: 20px;
         border-radius: 10px;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
         backdrop-filter: blur(10px);
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
       }
+
+      .controls {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
       select,
       button {
-        padding: 10px;
+        padding: 8px 12px;
         border-radius: 5px;
         border: none;
-        background: #007bff;
+        background: rgba(255, 255, 255, 0.2);
         color: white;
         cursor: pointer;
       }
+
+      select:focus,
+      button:focus {
+        outline: none;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      }
+
+      #chartContainer {
+        position: relative;
+        height: 400px;
+      }
+
       table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
         background: rgba(255, 255, 255, 0.1);
-        color: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
       }
+
       th,
       td {
-        padding: 12px;
         border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 12px;
+        text-align: left;
+        color: white;
       }
+
       th {
-        background: #007bff;
+        background: rgba(255, 255, 255, 0.2);
       }
-      .hidden {
-        display: none;
+
+      .view-toggle {
+        background: none;
+        border: 2px solid #00c3ff;
+        color: #00c3ff;
+        cursor: pointer;
+      }
+
+      .view-toggle.active {
+        background: #00c3ff;
+        color: white;
       }
     </style>
   </head>
   <body>
     <div class="container">
       <h1>Laporan Kunjungan Pelanggan</h1>
-      <div>
-        <select id="period" onchange="updateDisplay()">
+
+      <div class="controls">
+        <select id="period">
           <option value="day">Harian</option>
           <option value="week">Mingguan</option>
           <option value="month">Bulanan</option>
           <option value="year">Tahunan</option>
         </select>
-        <select id="branch" onchange="updateDisplay()">
+
+        <select id="branch">
           <option value="all">Semua Cabang</option>
           <option value="1">Cabang Pusat</option>
           <option value="2">Cabang Timur</option>
         </select>
-        <button onclick="toggleView()">Tampilan Grafik</button>
+
+        <button id="toggleView" class="view-toggle" onclick="toggleView()">
+          Tampilan Grafik
+        </button>
       </div>
-      <div id="chartContainer" class="hidden">
+
+      <div id="chartContainer" style="display: none">
         <canvas id="myChart"></canvas>
       </div>
+
       <table id="dataTable">
         <thead>
           <tr>
@@ -79,95 +121,99 @@
             <th>Jumlah Pelanggan</th>
           </tr>
         </thead>
-        <tbody id="tableBody"></tbody>
+        <tbody id="tableBody">
+          <script>
+            const mockData = [];
+            const branches = { 1: "Cabang Pusat", 2: "Cabang Timur" };
+            for (let i = 1; i <= 365; i++) {
+              let date = new Date(2023, 0, i);
+              let formattedDate = date.toISOString().split("T")[0];
+              Object.keys(branches).forEach((branch) => {
+                mockData.push({
+                  date: formattedDate,
+                  branch: branches[branch],
+                  customers: Math.floor(Math.random() * 50) + 5,
+                });
+              });
+            }
+            let currentChart = null;
+
+            function updateDisplay() {
+              let period = document.getElementById("period").value;
+              let branch = document.getElementById("branch").value;
+              let filteredData = mockData.filter(
+                (d) => branch === "all" || d.branch === branches[branch]
+              );
+              if (period === "week") {
+                filteredData = aggregateData(filteredData, 7);
+              } else if (period === "month") {
+                filteredData = aggregateData(filteredData, 30);
+              } else if (period === "year") {
+                filteredData = aggregateData(filteredData, 365);
+              }
+              document
+                .getElementById("chartContainer")
+                .classList.contains("hidden")
+                ? updateTable(filteredData)
+                : updateChart(filteredData);
+            }
+
+            function aggregateData(data, days) {
+              let aggregated = [];
+              for (let i = 0; i < data.length; i += days) {
+                let sum = data
+                  .slice(i, i + days)
+                  .reduce((acc, curr) => acc + curr.customers, 0);
+                aggregated.push({
+                  date: `Periode ${i / days + 1}`,
+                  branch: data[i].branch,
+                  customers: sum,
+                });
+              }
+              return aggregated;
+            }
+
+            function updateTable(data) {
+              let tbody = document.getElementById("tableBody");
+              tbody.innerHTML = "";
+              data.forEach((item) => {
+                let row = `<tr><td>${item.date}</td><td>${item.branch}</td><td>${item.customers}</td></tr>`;
+                tbody.innerHTML += row;
+              });
+            }
+
+            function updateChart(data) {
+              if (currentChart) currentChart.destroy();
+              let ctx = document.getElementById("myChart");
+              currentChart = new Chart(ctx, {
+                type: "line",
+                data: {
+                  labels: data.map((d) => d.date),
+                  datasets: [
+                    {
+                      label: "Jumlah Pelanggan",
+                      data: data.map((d) => d.customers),
+                      borderColor: "cyan",
+                      borderWidth: 2,
+                    },
+                  ],
+                },
+                options: { responsive: true },
+              });
+            }
+
+            function toggleView() {
+              document
+                .getElementById("chartContainer")
+                .classList.toggle("hidden");
+              document.getElementById("dataTable").classList.toggle("hidden");
+              updateDisplay();
+            }
+
+            updateDisplay();
+          </script>
+        </tbody>
       </table>
     </div>
-
-    <script>
-      const mockData = [];
-      const branches = { 1: "Cabang Pusat", 2: "Cabang Timur" };
-      for (let i = 1; i <= 365; i++) {
-        let date = new Date(2023, 0, i);
-        let formattedDate = date.toISOString().split("T")[0];
-        Object.keys(branches).forEach((branch) => {
-          mockData.push({
-            date: formattedDate,
-            branch: branches[branch],
-            customers: Math.floor(Math.random() * 50) + 5,
-          });
-        });
-      }
-      let currentChart = null;
-
-      function updateDisplay() {
-        let period = document.getElementById("period").value;
-        let branch = document.getElementById("branch").value;
-        let filteredData = mockData.filter(
-          (d) => branch === "all" || d.branch === branches[branch]
-        );
-        if (period === "week") {
-          filteredData = aggregateData(filteredData, 7);
-        } else if (period === "month") {
-          filteredData = aggregateData(filteredData, 30);
-        } else if (period === "year") {
-          filteredData = aggregateData(filteredData, 365);
-        }
-        document.getElementById("chartContainer").classList.contains("hidden")
-          ? updateTable(filteredData)
-          : updateChart(filteredData);
-      }
-
-      function aggregateData(data, days) {
-        let aggregated = [];
-        for (let i = 0; i < data.length; i += days) {
-          let sum = data
-            .slice(i, i + days)
-            .reduce((acc, curr) => acc + curr.customers, 0);
-          aggregated.push({
-            date: `Periode ${i / days + 1}`,
-            branch: data[i].branch,
-            customers: sum,
-          });
-        }
-        return aggregated;
-      }
-
-      function updateTable(data) {
-        let tbody = document.getElementById("tableBody");
-        tbody.innerHTML = "";
-        data.forEach((item) => {
-          let row = `<tr><td>${item.date}</td><td>${item.branch}</td><td>${item.customers}</td></tr>`;
-          tbody.innerHTML += row;
-        });
-      }
-
-      function updateChart(data) {
-        if (currentChart) currentChart.destroy();
-        let ctx = document.getElementById("myChart");
-        currentChart = new Chart(ctx, {
-          type: "line",
-          data: {
-            labels: data.map((d) => d.date),
-            datasets: [
-              {
-                label: "Jumlah Pelanggan",
-                data: data.map((d) => d.customers),
-                borderColor: "cyan",
-                borderWidth: 2,
-              },
-            ],
-          },
-          options: { responsive: true },
-        });
-      }
-
-      function toggleView() {
-        document.getElementById("chartContainer").classList.toggle("hidden");
-        document.getElementById("dataTable").classList.toggle("hidden");
-        updateDisplay();
-      }
-
-      updateDisplay();
-    </script>
   </body>
 </html>
