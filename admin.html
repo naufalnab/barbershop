@@ -7,61 +7,30 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       body {
-        font-family: "Poppins", sans-serif;
-        background: linear-gradient(to right, #141e30, #243b55);
-        color: #ffffff;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #1e1e2e, #232323);
+        color: white;
         margin: 0;
+        padding: 20px;
       }
-
       .container {
-        width: 90%;
         max-width: 1200px;
+        margin: auto;
         background: rgba(255, 255, 255, 0.1);
         padding: 20px;
         border-radius: 10px;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
         backdrop-filter: blur(10px);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
       }
-
-      .controls {
-        display: flex;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        margin-bottom: 20px;
-      }
-
       select,
       button {
-        padding: 10px 15px;
+        padding: 10px;
         border-radius: 5px;
         border: none;
-        outline: none;
         background: #007bff;
         color: white;
-        font-weight: bold;
         cursor: pointer;
-        transition: 0.3s;
       }
-
-      select {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-      }
-
-      button:hover {
-        background: #0056b3;
-      }
-
-      #chartContainer {
-        display: none;
-        position: relative;
-        height: 400px;
-      }
-
       table {
         width: 100%;
         border-collapse: collapse;
@@ -69,44 +38,39 @@
         background: rgba(255, 255, 255, 0.1);
         color: white;
       }
-
       th,
       td {
         padding: 12px;
-        text-align: left;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.3);
       }
-
       th {
-        background: rgba(255, 255, 255, 0.2);
+        background: #007bff;
+      }
+      .hidden {
+        display: none;
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1 style="text-align: center">Laporan Kunjungan Pelanggan</h1>
-
-      <div class="controls">
-        <select id="period">
+      <h1>Laporan Kunjungan Pelanggan</h1>
+      <div>
+        <select id="period" onchange="updateDisplay()">
           <option value="day">Harian</option>
           <option value="week">Mingguan</option>
           <option value="month">Bulanan</option>
           <option value="year">Tahunan</option>
         </select>
-
-        <select id="branch">
+        <select id="branch" onchange="updateDisplay()">
           <option value="all">Semua Cabang</option>
           <option value="1">Cabang Pusat</option>
           <option value="2">Cabang Timur</option>
         </select>
-
-        <button id="toggleView" onclick="toggleView()">Tampilan Grafik</button>
+        <button onclick="toggleView()">Tampilan Grafik</button>
       </div>
-
-      <div id="chartContainer">
+      <div id="chartContainer" class="hidden">
         <canvas id="myChart"></canvas>
       </div>
-
       <table id="dataTable">
         <thead>
           <tr>
@@ -115,82 +79,95 @@
             <th>Jumlah Pelanggan</th>
           </tr>
         </thead>
-        <tbody id="tableBody">
-          <!-- Data akan diisi oleh JavaScript -->
-        </tbody>
+        <tbody id="tableBody"></tbody>
       </table>
     </div>
 
     <script>
-      const mockData = [
-        { date: "2023-10-01", branch: "Cabang Pusat", customers: 15 },
-        { date: "2023-10-02", branch: "Cabang Pusat", customers: 20 },
-        { date: "2023-10-03", branch: "Cabang Pusat", customers: 18 },
-        { date: "2023-10-01", branch: "Cabang Timur", customers: 12 },
-        { date: "2023-10-02", branch: "Cabang Timur", customers: 14 },
-        { date: "2023-10-03", branch: "Cabang Timur", customers: 16 },
-      ];
-
+      const mockData = [];
+      const branches = { 1: "Cabang Pusat", 2: "Cabang Timur" };
+      for (let i = 1; i <= 365; i++) {
+        let date = new Date(2023, 0, i);
+        let formattedDate = date.toISOString().split("T")[0];
+        Object.keys(branches).forEach((branch) => {
+          mockData.push({
+            date: formattedDate,
+            branch: branches[branch],
+            customers: Math.floor(Math.random() * 50) + 5,
+          });
+        });
+      }
       let currentChart = null;
 
+      function updateDisplay() {
+        let period = document.getElementById("period").value;
+        let branch = document.getElementById("branch").value;
+        let filteredData = mockData.filter(
+          (d) => branch === "all" || d.branch === branches[branch]
+        );
+        if (period === "week") {
+          filteredData = aggregateData(filteredData, 7);
+        } else if (period === "month") {
+          filteredData = aggregateData(filteredData, 30);
+        } else if (period === "year") {
+          filteredData = aggregateData(filteredData, 365);
+        }
+        document.getElementById("chartContainer").classList.contains("hidden")
+          ? updateTable(filteredData)
+          : updateChart(filteredData);
+      }
+
+      function aggregateData(data, days) {
+        let aggregated = [];
+        for (let i = 0; i < data.length; i += days) {
+          let sum = data
+            .slice(i, i + days)
+            .reduce((acc, curr) => acc + curr.customers, 0);
+          aggregated.push({
+            date: `Periode ${i / days + 1}`,
+            branch: data[i].branch,
+            customers: sum,
+          });
+        }
+        return aggregated;
+      }
+
       function updateTable(data) {
-        const tbody = document.getElementById("tableBody");
+        let tbody = document.getElementById("tableBody");
         tbody.innerHTML = "";
         data.forEach((item) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `<td>${item.date}</td><td>${item.branch}</td><td>${item.customers}</td>`;
-          tbody.appendChild(row);
+          let row = `<tr><td>${item.date}</td><td>${item.branch}</td><td>${item.customers}</td></tr>`;
+          tbody.innerHTML += row;
         });
       }
 
       function updateChart(data) {
-        if (currentChart) {
-          currentChart.destroy();
-        }
-
-        const ctx = document.getElementById("myChart");
+        if (currentChart) currentChart.destroy();
+        let ctx = document.getElementById("myChart");
         currentChart = new Chart(ctx, {
           type: "line",
           data: {
-            labels: data.map((item) => item.date),
+            labels: data.map((d) => d.date),
             datasets: [
               {
                 label: "Jumlah Pelanggan",
-                data: data.map((item) => item.customers),
-                borderColor: "#00c3ff",
-                tension: 0.3,
+                data: data.map((d) => d.customers),
+                borderColor: "cyan",
+                borderWidth: 2,
               },
             ],
           },
-          options: { responsive: true, maintainAspectRatio: false },
+          options: { responsive: true },
         });
       }
 
       function toggleView() {
-        const chartContainer = document.getElementById("chartContainer");
-        const table = document.getElementById("dataTable");
-        const button = document.getElementById("toggleView");
-
-        if (chartContainer.style.display === "none") {
-          chartContainer.style.display = "block";
-          table.style.display = "none";
-          button.textContent = "Tampilan Tabel";
-          updateChart(mockData);
-        } else {
-          chartContainer.style.display = "none";
-          table.style.display = "table";
-          button.textContent = "Tampilan Grafik";
-          updateTable(mockData);
-        }
+        document.getElementById("chartContainer").classList.toggle("hidden");
+        document.getElementById("dataTable").classList.toggle("hidden");
+        updateDisplay();
       }
 
-      document
-        .getElementById("period")
-        .addEventListener("change", () => updateTable(mockData));
-      document
-        .getElementById("branch")
-        .addEventListener("change", () => updateTable(mockData));
-      updateTable(mockData);
+      updateDisplay();
     </script>
   </body>
 </html>
