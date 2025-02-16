@@ -7,66 +7,87 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       body {
-        font-family: Arial, sans-serif;
-        padding: 20px;
-        background-color: #f0f2f5;
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(135deg, #1f1c2c, #928dab);
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
       }
 
       .container {
         max-width: 1200px;
-        margin: 0 auto;
-        background: white;
+        background: rgba(255, 255, 255, 0.1);
         padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        text-align: center;
       }
 
       .controls {
         display: flex;
-        gap: 20px;
+        justify-content: center;
+        gap: 15px;
         margin-bottom: 20px;
         flex-wrap: wrap;
       }
 
       select,
       button {
-        padding: 8px 12px;
+        padding: 10px 15px;
         border-radius: 5px;
-        border: 1px solid #ddd;
+        border: none;
+        font-size: 16px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      select:hover,
+      button:hover {
+        background: rgba(255, 255, 255, 0.4);
       }
 
       #chartContainer {
         position: relative;
         height: 400px;
+        display: none;
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        overflow: hidden;
       }
 
       th,
       td {
-        border: 1px solid #ddd;
         padding: 12px;
         text-align: left;
+        color: white;
       }
 
       th {
-        background-color: #f8f9fa;
+        background-color: rgba(255, 255, 255, 0.3);
       }
 
       .view-toggle {
-        background: none;
-        border: 2px solid #007bff;
-        color: #007bff;
-        cursor: pointer;
+        background: transparent;
+        border: 2px solid white;
+        color: white;
+        font-weight: bold;
       }
 
       .view-toggle.active {
-        background: #007bff;
-        color: white;
+        background: white;
+        color: #1f1c2c;
       }
     </style>
   </head>
@@ -93,7 +114,7 @@
         </button>
       </div>
 
-      <div id="chartContainer" style="display: none">
+      <div id="chartContainer">
         <canvas id="myChart"></canvas>
       </div>
 
@@ -112,102 +133,6 @@
     </div>
 
     <script>
-      // Data dummy
-      const mockData = [
-        { date: "2023-10-01", branch: "Cabang Pusat", customers: 15 },
-        { date: "2023-10-02", branch: "Cabang Pusat", customers: 20 },
-        { date: "2023-10-03", branch: "Cabang Pusat", customers: 18 },
-        { date: "2023-10-01", branch: "Cabang Timur", customers: 12 },
-        { date: "2023-10-02", branch: "Cabang Timur", customers: 14 },
-        { date: "2023-10-03", branch: "Cabang Timur", customers: 16 },
-      ];
-
-      let currentChart = null;
-
-      function updateDisplay() {
-        const period = document.getElementById("period").value;
-        const branch = document.getElementById("branch").value;
-
-        // Filter data
-        let filteredData = mockData.filter(
-          (item) =>
-            branch === "all" ||
-            item.branch === (branch === "1" ? "Cabang Pusat" : "Cabang Timur")
-        );
-
-        // Aggregasi data
-        if (period === "day") {
-          // Tidak perlu aggregasi untuk harian
-        } else if (period === "week") {
-          // Contoh aggregasi mingguan (sederhana)
-          filteredData = filteredData.reduce((acc, curr) => {
-            const week = getWeek(curr.date);
-            if (!acc[week])
-              acc[week] = { date: `Minggu ${week}`, customers: 0 };
-            acc[week].customers += curr.customers;
-            return acc;
-          }, {});
-          filteredData = Object.values(filteredData);
-        }
-
-        // Update tampilan
-        if (
-          document.getElementById("chartContainer").style.display === "none"
-        ) {
-          updateTable(filteredData);
-        } else {
-          updateChart(filteredData);
-        }
-      }
-
-      function getWeek(dateString) {
-        const date = new Date(dateString);
-        const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-        const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
-        return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
-      }
-
-      function updateTable(data) {
-        const tbody = document.getElementById("tableBody");
-        tbody.innerHTML = "";
-
-        data.forEach((item) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-                    <td>${item.date}</td>
-                    <td>${item.branch}</td>
-                    <td>${item.customers}</td>
-                `;
-          tbody.appendChild(row);
-        });
-      }
-
-      function updateChart(data) {
-        if (currentChart) {
-          currentChart.destroy();
-        }
-
-        const ctx = document.getElementById("myChart");
-        currentChart = new Chart(ctx, {
-          type: "line",
-          data: {
-            labels: data.map((item) => item.date),
-            datasets: [
-              {
-                label: "Jumlah Pelanggan",
-                data: data.map((item) => item.customers),
-                borderColor: "#007bff",
-                tension: 0.1,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-          },
-        });
-      }
-
       function toggleView() {
         const chartContainer = document.getElementById("chartContainer");
         const table = document.getElementById("dataTable");
@@ -217,23 +142,12 @@
           chartContainer.style.display = "block";
           table.style.display = "none";
           button.textContent = "Tampilan Tabel";
-          updateChart(mockData);
         } else {
           chartContainer.style.display = "none";
           table.style.display = "table";
           button.textContent = "Tampilan Grafik";
-          updateTable(mockData);
         }
       }
-
-      // Inisialisasi
-      document
-        .getElementById("period")
-        .addEventListener("change", updateDisplay);
-      document
-        .getElementById("branch")
-        .addEventListener("change", updateDisplay);
-      updateDisplay();
     </script>
   </body>
 </html>
