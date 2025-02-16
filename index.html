@@ -1,157 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - Barbershop System</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .login-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            width: 300px;
-        }
-
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #555;
-        }
-
-        input {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        button {
-            width: 100%;
-            padding: 0.75rem;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .error-message {
-            color: red;
-            margin-top: 1rem;
-            text-align: center;
-            display: none;
-        }
-
-        .logout-container {
-            text-align: center;
-            margin-top: 1rem;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        background: #1a1a2e;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        color: white;
+      }
+      .container {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        width: 320px;
+        text-align: center;
+      }
+      h2 {
+        margin-bottom: 1.5rem;
+      }
+      .form-group {
+        margin-bottom: 1rem;
+        text-align: left;
+      }
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+      }
+      input {
+        width: 100%;
+        padding: 0.5rem;
+        border: none;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+      button {
+        width: 100%;
+        padding: 0.75rem;
+        background: #00adb5;
+        border: none;
+        border-radius: 5px;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #007f7f;
+      }
+      .error-message {
+        color: red;
+        margin-top: 1rem;
+        display: none;
+      }
     </style>
-</head>
-<body>
-    <!-- Halaman Login -->
-    <div class="login-container" id="loginPage">
-        <h2>Login Sistem Barbershop</h2>
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="username">Username:</label>
-                <input type="text" id="username" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" id="password" required>
-            </div>
-            <button type="submit">Masuk</button>
-        </form>
-        <div class="error-message" id="errorMessage">
-            Username atau password salah!
+  </head>
+  <body>
+    <div class="container" id="loginPage">
+      <h2>Login Barbershop</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" required />
         </div>
-    </div>
-
-    <!-- Halaman Dashboard (tersembunyi awal) -->
-    <div class="login-container" id="dashboardPage" style="display: none;">
-        <h2>Selamat Datang, <span id="loggedInUser"></span></h2>
-        <div class="logout-container">
-            <button onclick="logout()">Logout</button>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" required />
         </div>
+        <button type="submit">Login</button>
+      </form>
+      <div class="error-message" id="errorMessage">
+        Username atau password salah!
+      </div>
     </div>
 
     <script>
-        // Dummy user database (untuk demo saja)
-        const users = {
-            "admin": "password123",
-            "owner": "securepass"
-        };
+      const users = {
+        admin: { password: "password123", role: "admin" },
+        owner: { password: "securepass", role: "owner" },
+      };
 
-        // Check session storage untuk status login
-        function checkLogin() {
-            const loggedInUser = localStorage.getItem('loggedInUser');
-            if(loggedInUser) {
-                showDashboard(loggedInUser);
-            }
-        }
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const username = document.getElementById("username").value;
+          const password = document.getElementById("password").value;
 
-        // Handle form login
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            if(users[username] && users[username] === password) {
-                localStorage.setItem('loggedInUser', username);
-                showDashboard(username);
-            } else {
-                document.getElementById('errorMessage').style.display = 'block';
-            }
+          if (users[username] && users[username].password === password) {
+            localStorage.setItem("loggedInUser", username);
+            localStorage.setItem("role", users[username].role);
+            window.location.href = users[username].role + ".html";
+          } else {
+            document.getElementById("errorMessage").style.display = "block";
+          }
         });
-
-        // Tampilkan dashboard
-        function showDashboard(username) {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('dashboardPage').style.display = 'block';
-            document.getElementById('loggedInUser').textContent = username;
-        }
-
-        // Logout
-        function logout() {
-            localStorage.removeItem('loggedInUser');
-            document.getElementById('loginPage').style.display = 'block';
-            document.getElementById('dashboardPage').style.display = 'none';
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('errorMessage').style.display = 'none';
-        }
-
-        // Cek status login saat pertama kali load
-        checkLogin();
     </script>
-</body>
+  </body>
 </html>
-
