@@ -8,8 +8,8 @@
     <style>
       body {
         font-family: "Poppins", sans-serif;
-        background: linear-gradient(135deg, #1f1c2c, #928dab);
-        color: white;
+        background: linear-gradient(to right, #141e30, #243b55);
+        color: #ffffff;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -18,21 +18,20 @@
       }
 
       .container {
+        width: 90%;
         max-width: 1200px;
         background: rgba(255, 255, 255, 0.1);
         padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
         backdrop-filter: blur(10px);
-        text-align: center;
       }
 
       .controls {
         display: flex;
-        justify-content: center;
-        gap: 15px;
-        margin-bottom: 20px;
+        justify-content: space-between;
         flex-wrap: wrap;
+        margin-bottom: 20px;
       }
 
       select,
@@ -40,60 +39,52 @@
         padding: 10px 15px;
         border-radius: 5px;
         border: none;
-        font-size: 16px;
-        background: rgba(255, 255, 255, 0.2);
+        outline: none;
+        background: #007bff;
         color: white;
+        font-weight: bold;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: 0.3s;
       }
 
-      select:hover,
+      select {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+
       button:hover {
-        background: rgba(255, 255, 255, 0.4);
+        background: #0056b3;
       }
 
       #chartContainer {
+        display: none;
         position: relative;
         height: 400px;
-        display: none;
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 10px;
-        overflow: hidden;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
       }
 
       th,
       td {
         padding: 12px;
         text-align: left;
-        color: white;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
       }
 
       th {
-        background-color: rgba(255, 255, 255, 0.3);
-      }
-
-      .view-toggle {
-        background: transparent;
-        border: 2px solid white;
-        color: white;
-        font-weight: bold;
-      }
-
-      .view-toggle.active {
-        background: white;
-        color: #1f1c2c;
+        background: rgba(255, 255, 255, 0.2);
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>Laporan Kunjungan Pelanggan</h1>
+      <h1 style="text-align: center">Laporan Kunjungan Pelanggan</h1>
 
       <div class="controls">
         <select id="period">
@@ -109,9 +100,7 @@
           <option value="2">Cabang Timur</option>
         </select>
 
-        <button id="toggleView" class="view-toggle" onclick="toggleView()">
-          Tampilan Grafik
-        </button>
+        <button id="toggleView" onclick="toggleView()">Tampilan Grafik</button>
       </div>
 
       <div id="chartContainer">
@@ -133,6 +122,50 @@
     </div>
 
     <script>
+      const mockData = [
+        { date: "2023-10-01", branch: "Cabang Pusat", customers: 15 },
+        { date: "2023-10-02", branch: "Cabang Pusat", customers: 20 },
+        { date: "2023-10-03", branch: "Cabang Pusat", customers: 18 },
+        { date: "2023-10-01", branch: "Cabang Timur", customers: 12 },
+        { date: "2023-10-02", branch: "Cabang Timur", customers: 14 },
+        { date: "2023-10-03", branch: "Cabang Timur", customers: 16 },
+      ];
+
+      let currentChart = null;
+
+      function updateTable(data) {
+        const tbody = document.getElementById("tableBody");
+        tbody.innerHTML = "";
+        data.forEach((item) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${item.date}</td><td>${item.branch}</td><td>${item.customers}</td>`;
+          tbody.appendChild(row);
+        });
+      }
+
+      function updateChart(data) {
+        if (currentChart) {
+          currentChart.destroy();
+        }
+
+        const ctx = document.getElementById("myChart");
+        currentChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: data.map((item) => item.date),
+            datasets: [
+              {
+                label: "Jumlah Pelanggan",
+                data: data.map((item) => item.customers),
+                borderColor: "#00c3ff",
+                tension: 0.3,
+              },
+            ],
+          },
+          options: { responsive: true, maintainAspectRatio: false },
+        });
+      }
+
       function toggleView() {
         const chartContainer = document.getElementById("chartContainer");
         const table = document.getElementById("dataTable");
@@ -142,12 +175,22 @@
           chartContainer.style.display = "block";
           table.style.display = "none";
           button.textContent = "Tampilan Tabel";
+          updateChart(mockData);
         } else {
           chartContainer.style.display = "none";
           table.style.display = "table";
           button.textContent = "Tampilan Grafik";
+          updateTable(mockData);
         }
       }
+
+      document
+        .getElementById("period")
+        .addEventListener("change", () => updateTable(mockData));
+      document
+        .getElementById("branch")
+        .addEventListener("change", () => updateTable(mockData));
+      updateTable(mockData);
     </script>
   </body>
 </html>
